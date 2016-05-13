@@ -20,7 +20,6 @@
 #include <linux/delay.h>
 #include <linux/slab.h>
 #include <linux/interrupt.h>
-#include <mach/irqs.h>
 #include <linux/kernel.h>
 #include <linux/semaphore.h>
 #include <linux/mutex.h>
@@ -413,17 +412,17 @@ exit_check_functionality_failed:
 }
 
 #ifdef CONFIG_PM
-static int ft6x06_ts_suspend(struct i2c_client *client, pm_message_t mesg)
+static int ft6x06_ts_suspend(struct device *dev, pm_message_t mesg)
 {
-	struct ft6x06_ts_data *ts = i2c_get_clientdata(client);
+	struct ft6x06_ts_data *ts = dev_get_drvdata(dev);
 	dev_dbg(&ts->client->dev, "[FTS]ft6x06 suspend\n");
 	disable_irq(ts->pdata->irq_gpio);
 	return 0;
 }
 
-static int ft6x06_ts_resume(struct i2c_client *client)
+static int ft6x06_ts_resume(struct device *dev)
 {
-	struct ft6x06_ts_data *ts = i2c_get_clientdata(client);
+	struct ft6x06_ts_data *ts = dev_get_drvdata(dev);
 	dev_dbg(&ts->client->dev, "[FTS]ft6x06 resume.\n");
 	if (gpio_is_valid(ts->pdata->reset_gpio)) {
 		gpio_set_value(ts->pdata->reset_gpio, 0);
@@ -464,17 +463,16 @@ static struct of_device_id ft6x06_match_table[] = {
 #define ft6x06_match_table NULL
 #endif
 
-
 static struct i2c_driver ft6x06_ts_driver = {
 	.probe = ft6x06_ts_probe,
 	.remove = ft6x06_ts_remove,
 	.id_table = ft6x06_ts_id,
-	.suspend = ft6x06_ts_suspend,
-	.resume = ft6x06_ts_resume,
 	.driver = {
 		.name = FT6X06_NAME,
 		.owner = THIS_MODULE,
 		.of_match_table=ft6x06_match_table,
+	  .suspend = ft6x06_ts_suspend,
+	  .resume = ft6x06_ts_resume,
 	},
 };
 
